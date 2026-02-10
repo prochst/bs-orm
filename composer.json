@@ -1,0 +1,40 @@
+{
+    "name": "prochst/bs-orm",
+    "description": "Simple, lightweight ORM for PHP with multi-language support, relations, and migrations",
+    "type": "library",
+    "keywords": [
+        "orm",
+        "database",
+        "pdo",
+        "mysql",
+        "postgresql",
+        "sqlite",
+        "active-record",
+        "repository-pattern"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "prochst",
+            "email": "your-email@example.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.1"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "prochst\\bsOrm\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "prochst\\bsOrm\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

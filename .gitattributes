@@ -1,0 +1,6 @@
+* text=auto
+
+# Ignore for archives
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/tests export-ignore
