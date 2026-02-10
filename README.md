@@ -21,6 +21,10 @@ Simple, lightweight ORM for PHP with multi-language support, relations, and migr
 composer require prochst/bs-orm
 ```
 
+## Documentation
+
+For detailed documentation, guides, and examples, see [docs/README.md](docs/README.md).
+
 ## Quick Start
 
 ### 1. Define Your Entity
