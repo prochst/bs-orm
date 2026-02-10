@@ -76,6 +76,73 @@ class User extends Entity
 }
 ```
 
+#### For PHP 8.4+ with Property Hooks and Asymmetric Visibility
+
+If you're using PHP 8.4 or later, you can leverage the new `public private(set)` syntax for cleaner code without explicit getters:
+
+```php
+<?php
+
+use prochst\bsOrm\Entity;
+use prochst\bsOrm\Table;
+use prochst\bsOrm\Column;
+use prochst\bsOrm\Types\StringType;
+use prochst\bsOrm\Types\IntegerType;
+
+#[Table(name: 'users', label: 'Users')]
+class User extends Entity
+{
+    #[Column(
+        type: new IntegerType(),
+        primaryKey: true,
+        autoIncrement: true
+    )]
+    public private(set) ?int $id = null;
+
+    #[Column(
+        name: 'email',
+        type: new StringType(maxLength: 255),
+        label: 'Email Address',
+        nullable: false,
+        unique: true
+    )]
+    public private(set) string $email;
+
+    #[Column(
+        type: new StringType(maxLength: 100),
+        label: 'Name'
+    )]
+    public private(set) string $name;
+
+    // Only setters needed - properties are publicly readable
+    public function setEmail(string $email): void {
+        $this->email = $email;
+        $this->markFieldAsModified('email');
+    }
+    
+    public function setName(string $name): void {
+        $this->name = $name;
+        $this->markFieldAsModified('name');
+    }
+}
+
+// Usage - direct property access for reading:
+$user = $userRepo->find(1);
+echo $user->name;  // No getter needed!
+echo $user->email; // Direct property access
+
+// Writing still requires setters for change tracking:
+$user->setName('John Doe');
+```
+
+This approach provides:
+- **Cleaner syntax** - No boilerplate getters
+- **Type safety** - Full type hints preserved
+- **Write protection** - Properties can only be modified via setters
+- **Change tracking** - Setters still call `markFieldAsModified()`
+
+See [examples/basic-usage-84.php](examples/basic-usage-84.php) for a complete working example.
+
 ### 2. Use the Repository
 
 ```php

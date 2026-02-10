@@ -1,9 +1,12 @@
 <?php
 
 /**
- * Příklad použití BS ORM
+ * Příklad použití BS ORM pro PHP 8.4+
  * 
  * Tento soubor ukazuje, jak používat BS ORM v běžném PHP projektu.
+ * 
+ * VYŽADUJE PHP 8.4+
+ * Využívá property hooks a asymetric visibility (public private(set))
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -38,7 +41,7 @@ class User extends Entity
         primaryKey: true,
         autoIncrement: true
     )]
-    private ?int $id = null;
+    public private(set) ?int $id = null;
 
     #[Column(
         name: 'email',
@@ -51,7 +54,7 @@ class User extends Entity
         nullable: false,
         unique: true
     )]
-    private string $email;
+    public private(set) string $email;
 
     #[Column(
         type: new StringType(maxLength: 100),
@@ -61,31 +64,23 @@ class User extends Entity
             'en_US' => 'Name',
         ]
     )]
-    private string $name;
+    public private(set) string $name;
 
     #[Column(
         type: new BooleanType(),
         label: 'Active'
     )]
-    private bool $active = true;
+    public private(set) bool $active = true;
 
     #[Column(
         name: 'created_at',
         type: new DateTimeType(),
         label: 'Created At'
     )]
-    private ?\DateTimeImmutable $createdAt = null;
+    public private(set) ?\DateTimeImmutable $createdAt = null;
 
     #[HasMany(entityClass: Post::class, foreignKey: 'user_id')]
-    private array $posts = [];
-
-    // Getters
-    public function getId(): ?int { return $this->id; }
-    public function getEmail(): string { return $this->email; }
-    public function getName(): string { return $this->name; }
-    public function isActive(): bool { return $this->active; }
-    public function getCreatedAt(): ?\DateTimeImmutable { return $this->createdAt; }
-    public function getPosts(): array { return $this->posts; }
+    public private(set) array $posts = [];
 
     // Setters
     public function setEmail(string $email): void {
@@ -113,21 +108,16 @@ class User extends Entity
 class Post extends Entity
 {
     #[Column(type: new IntegerType(), primaryKey: true, autoIncrement: true)]
-    private ?int $id = null;
+    public private(set) ?int $id = null;
 
     #[Column(type: new IntegerType())]
-    private int $user_id;
+    public private(set) int $user_id;
 
     #[Column(type: new StringType(maxLength: 255))]
-    private string $title;
+    public private(set) string $title;
 
     #[Column(type: new DateTimeType())]
-    private ?\DateTimeImmutable $created_at = null;
-
-    public function getId(): ?int { return $this->id; }
-    public function getUserId(): int { return $this->user_id; }
-    public function getTitle(): string { return $this->title; }
-    public function getCreatedAt(): ?\DateTimeImmutable { return $this->created_at; }
+    public private(set) ?\DateTimeImmutable $created_at = null;
 
     public function setUserId(int $user_id): void {
         $this->user_id = $user_id;
@@ -176,7 +166,7 @@ $user->setActive(true);
 $user->setCreatedAt(new DateTimeImmutable());
 
 if ($userRepo->save($user)) {
-    echo "✓ Uživatel vytvořen s ID: " . $user->getId() . "\n\n";
+    echo "✓ Uživatel vytvořen s ID: " . $user->id . "\n\n";
 }
 
 // ===========================
@@ -186,9 +176,9 @@ echo "=== Načtení uživatele podle ID ===\n";
 
 $user = $userRepo->find(1);
 if ($user instanceof User) {
-    echo "Uživatel: " . $user->getName() . "\n";
-    echo "Email: " . $user->getEmail() . "\n";
-    echo "Aktivní: " . ($user->isActive() ? 'Ano' : 'Ne') . "\n\n";
+    echo "Uživatel: " . $user->name . "\n";
+    echo "Email: " . $user->email . "\n";
+    echo "Aktivní: " . ($user->active ? 'Ano' : 'Ne') . "\n\n";
 }
 
 // ===========================
@@ -207,7 +197,6 @@ if ($user instanceof User) {
 // PŘÍKLAD 4: Vyhledávání podle kritérií
 // ===========================
 echo "=== Vyhledávání aktivních uživatelů ===\n";
-
 /** @var User[] $activeUsers */
 $activeUsers = $userRepo->findBy(
     ['active' => true],
@@ -217,7 +206,7 @@ $activeUsers = $userRepo->findBy(
 
 echo "Nalezeno " . count($activeUsers) . " aktivních uživatelů:\n";
 foreach ($activeUsers as $user) {
-    echo "- " . $user->getName() . " (" . $user->getEmail() . ")\n";
+    echo "- " . $user->name . " (" . $user->email . ")\n";
 }
 echo "\n";
 
@@ -236,11 +225,10 @@ echo "Aktivních: $activeCount\n\n";
 // PŘÍKLAD 6: Eager loading (načtení relací)
 // ===========================
 echo "=== Eager loading uživatelů s posty ===\n";
-
 /** @var User[] $users */
 $users = $userRepo->findAllWithRelations(['posts']);
 foreach ($users as $user) {
-    echo $user->getName() . " má " . count($user->getPosts()) . " příspěvků\n";
+    echo $user->name . " má " . count($user->posts) . " příspěvků\n";
 }
 echo "\n";
 
@@ -260,7 +248,7 @@ try {
         
         // Vytvoř post pro uživatele
         $post = new Post();
-        $post->setUserId($user->getId());
+        $post->setUserId($user->id);
         $post->setTitle('První příspěvek Jane');
         $post->setCreatedAt(new DateTimeImmutable());
         $postRepo->save($post);
@@ -278,7 +266,7 @@ echo "\n";
 echo "=== Smazání uživatele ===\n";
 
 $user = $userRepo->find(1);
-if ($user instanceof User && $userRepo->delete($user)) {
+if ($user && $userRepo->delete($user)) {
     echo "✓ Uživatel smazán\n";
 }
 
