@@ -74,7 +74,8 @@ class Dbal
     public function execute(string $sql, array $params = []): bool
     {
         $stmt = $this->prepare($sql);
-        return $stmt->execute($params);
+        $this->bindParams($stmt, $params);
+        return $stmt->execute();
     }
     
     /**
@@ -90,7 +91,8 @@ class Dbal
     public function fetchOne(string $sql, array $params = []): ?array
     {
         $stmt = $this->prepare($sql);
-        $stmt->execute($params);
+        $this->bindParams($stmt, $params);
+        $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
         return $result ?: null;
@@ -109,7 +111,8 @@ class Dbal
     public function fetchAll(string $sql, array $params = []): array
     {
         $stmt = $this->prepare($sql);
-        $stmt->execute($params);
+        $this->bindParams($stmt, $params);
+        $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -129,7 +132,8 @@ class Dbal
     public function fetchSingle(string $sql, array $params = []): mixed
     {
         $stmt = $this->prepare($sql);
-        $stmt->execute($params);
+        $this->bindParams($stmt, $params);
+        $stmt->execute();
         
         return $stmt->fetchColumn();
     }
@@ -143,6 +147,31 @@ class Dbal
      * 
      * @throws \RuntimeException Pokud příprava SQL statement selže (chyba syntaxe, atd.)
      */
+    /**
+     * Naváže parametry na prepared statement se správným PDO typem
+     *
+     * Automaticky mapuje PHP typy na PDO konstanty:
+     * - int  → PDO::PARAM_INT
+     * - bool → PDO::PARAM_BOOL
+     * - null → PDO::PARAM_NULL
+     * - ostatní → PDO::PARAM_STR
+     *
+     * @param PDOStatement $stmt Připravený statement
+     * @param array<int|string, mixed> $params Parametry k navázání
+     */
+    private function bindParams(PDOStatement $stmt, array $params): void
+    {
+        foreach (array_values($params) as $i => $value) {
+            $type = match (true) {
+                is_int($value)  => PDO::PARAM_INT,
+                is_bool($value) => PDO::PARAM_BOOL,
+                is_null($value) => PDO::PARAM_NULL,
+                default         => PDO::PARAM_STR,
+            };
+            $stmt->bindValue($i + 1, $value, $type);
+        }
+    }
+
     public function prepare(string $sql): PDOStatement
     {
         try {
